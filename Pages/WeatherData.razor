@@ -1,0 +1,74 @@
+﻿@page "/weather"
+
+@inject IHttpClientFactory _clientFactory
+
+<h3>Weather Data</h3>
+@if (string.IsNullOrWhiteSpace(errorString) == false)
+{
+    <div class="h2">@errorString</div>
+}
+else if (forecast is null)
+{
+    <div class="h4">Loading...</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Date</th>
+                <th>Temperature</th>
+                <th>Weather Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var w in forecast.Weather)
+            {
+                <tr> 
+                    <td>@w.Id</td>
+                    <td>@w.Main</td>
+                    <td>@w.Description</td>
+                
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+
+@code{
+    
+    WeatherForecastModel forecast;
+    string errorString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get,
+        "https://fcc-weather-api.glitch.me/api/current?lat=35&lon=139");
+
+        var client = _clientFactory.CreateClient();
+        HttpResponseMessage response = await client.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            forecast = await response.Content.ReadFromJsonAsync<WeatherForecastModel>();
+            errorString = null;
+        }
+        else
+        {
+            errorString = $"There was an error getting our forecast: {response.ReasonPhrase}";
+        }
+
+        //var client = _clientFactory.CreateClient("meta");
+        //try
+        //{
+        //    forecast = await client.GetFromJsonAsync<WeatherForecastModel>("current?lat=35&lon=139");
+        //    errorString = null;
+        //}
+        //catch(Exception ex)
+        //{
+        //    errorString = $"There was an error getting our forecast: {ex.Message}";
+        //}
+    }
+
+}
